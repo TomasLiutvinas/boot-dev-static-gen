@@ -11,8 +11,16 @@ class TextType(Enum):
     ITALIC = "italic"
     CODE = "code"
     LINK = "links"
-    IMAGE= "images"
+    IMAGE= "image"
     TEXT= "text"
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST= "unordered_list"
+    ORDERED_LIST= "ordered_list"
 
 class TextNode():
     def __init__(self, text, text_type, url=None):

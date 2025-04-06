@@ -1,6 +1,6 @@
 from htmlnode import HTMLNode
 from leafnode import LeafNode
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, BlockType
 import re
 from functools import reduce
 
@@ -107,4 +107,45 @@ def markdown_to_blocks(markdown):
     res = list(map(lambda x: x.strip(),markdown.split('\n\n')))
     return list(filter(lambda x: x != "",res))
 
+# Headings start with 1-6 # characters, followed by a space and then the heading text.
+# Code blocks must start with 3 backticks and end with 3 backticks.
+# Every line in a quote block must start with a > character.
+# Every line in an unordered list block must start with a - character, followed by a space.
+# Every line in an ordered list block must start with a number followed by a . character and a space. The number must start at 1 and increment by 1 for each line.
+# If none of the above conditions are met, the block is a normal paragraph.
+def block_to_block_type(block_md):
+    def get_head():
+        parts = block_md.split()
+        if parts[0].strip("#") == "":
+            return len(parts[0]) < 7
+        return False
+    def get_code():
+        return len(list(filter(lambda x: x == '`',block_md[:3]))) == 3 and len(list(filter(lambda x: x == '`',block_md[-3:]))) == 3
+    def get_quote():
+        return len(list(filter(lambda x: len(x) > 0 and x[0] != '>', block_md.split('\n')))) == 0
+    def get_unordered_l():
+        return len(list(filter(lambda x: len(x) > 2 and x[0] != '-' and x[1] != ' ', block_md.split('\n')))) == 0
+    def get_ordered_l():
+        count = 1
+        parts = block_md.split('\n')
+        for part in parts:
+            if len(part) < 3:
+                return False
+            if part[0] != str(count) or part[1] != '.' or part[2] != ' ':
+                return False
+            count = count + 1
 
+        return True
+
+    if get_head():
+        return BlockType.HEADING
+    if get_code():
+        return BlockType.CODE
+    if get_quote():
+        return BlockType.QUOTE
+    if get_unordered_l():
+        return BlockType.UNORDERED_LIST
+    if get_ordered_l():
+        return BlockType.ORDERED_LIST
+
+    return BlockType.PARAGRAPH

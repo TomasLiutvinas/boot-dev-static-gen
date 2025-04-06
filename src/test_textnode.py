@@ -1,7 +1,7 @@
 import unittest
 
-from textnode import TextNode, TextType
-from utils import split_nodes_delimiter, text_node_to_html_node, extract_markdown_images, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
+from textnode import BlockType, TextNode, TextType
+from utils import block_to_block_type, split_nodes_delimiter, text_node_to_html_node, extract_markdown_images, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
 
 
 class TestTextNode(unittest.TestCase):
@@ -149,6 +149,43 @@ This is the same paragraph on a new line
                 "- This is a list\n- with items",
             ],
         )
+
+    # PARAGRAPH = "paragraph"
+    # HEADING = "heading"
+    # CODE = "code"
+    # QUOTE = "quote"
+    # UNORDERED_LIST= "unordered_list"
+    # ORDERED_LIST= "ordered_list"
+
+    def test_paragraph(self):
+        md = "anything really"
+        block = block_to_block_type(md)
+        self.assertEqual(block,BlockType.PARAGRAPH)
+
+    def test_head(self):
+        md = "# Hed1"
+        block = block_to_block_type(md)
+        self.assertEqual(block,BlockType.HEADING)
+
+    def test_code(self):
+        md = "```wowowo```"
+        block = block_to_block_type(md)
+        self.assertEqual(block,BlockType.CODE)
+
+    def test_quote(self):
+        md = "> something"
+        block = block_to_block_type(md)
+        self.assertEqual(block,BlockType.QUOTE)
+
+    def test_unordered(self):
+        md = "- something\n- something also"
+        block = block_to_block_type(md)
+        self.assertEqual(block,BlockType.UNORDERED_LIST)
+
+    def test_ordered(self):
+        md = "1. something\n2. something also"
+        block = block_to_block_type(md)
+        self.assertEqual(block,BlockType.ORDERED_LIST)
 
 if __name__ == "__main__":
     unittest.main()
