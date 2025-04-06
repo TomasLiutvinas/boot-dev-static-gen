@@ -14,4 +14,6 @@ class HTMLNode():
         return f"HTMLNode({self.tag}, {self.value}, {self.children}, {self.props})"
 
     def props_to_html(self):
+        if self.props == {}:
+            return ""
         return reduce(lambda x,y: f"{x} {y[0]}='{y[1]}'",self.props.items(),"")
