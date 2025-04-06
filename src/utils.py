@@ -2,6 +2,7 @@ from htmlnode import HTMLNode
 from leafnode import LeafNode
 from textnode import TextNode, TextType
 import re
+from functools import reduce
 
 def extract_markdown_images(text):
     return re.findall(r"!\[(.*?)\]\((.*?)\)",text)
@@ -64,7 +65,11 @@ def split_nodes_link(old_nodes):
             res = res + split_nodes_link([before]) + [item] + split_nodes_link([after])
     return res
 
-def split_nodes_delimiter(old_nodes, delimiter, text_type):
+
+
+def split_nodes_delimiter(old_nodes, delimiter):
+    # print("CALLED WITH NODES:", old_nodes)
+    # print("CALLED WITH DELIMITERO:", delimiter)
     def get_type(delimiter):
         match delimiter:
             case '`':
@@ -83,8 +88,17 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             before = TextNode(parts[0], node.text_type)
             item = TextNode(parts[1], get_type(delimiter))
             after = list(map(lambda x: TextNode(x,node.text_type),parts[2:]))
-            res += split_nodes_delimiter([before,item] + after, delimiter, text_type)
+            res += split_nodes_delimiter([before,item] + after, delimiter)
         else:
             if len(parts) > 0 and parts[0] != "":
                 res.append(node)
     return res
+
+def text_to_textnodes(text):
+    delimiters = ['`','_','**']
+    updated_nodes = list(text)
+    for pisau in delimiters:
+        updated_nodes = split_nodes_delimiter(updated_nodes,pisau)
+    updated_nodes = split_nodes_image(updated_nodes)
+    updated_nodes = split_nodes_link(updated_nodes)
+    return updated_nodes

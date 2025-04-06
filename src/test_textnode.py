@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from utils import split_nodes_delimiter, text_node_to_html_node, extract_markdown_images, split_nodes_image, split_nodes_link
+from utils import split_nodes_delimiter, text_node_to_html_node, extract_markdown_images, split_nodes_image, split_nodes_link, text_to_textnodes
 
 
 class TestTextNode(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestTextNode(unittest.TestCase):
         node = TextNode("Text `asd` xxx", TextType.TEXT)
         node2 = TextNode("Text `www` www", TextType.BOLD)
         nodes = [node, node2]
-        result_nodes = split_nodes_delimiter(nodes, '`',TextType.CODE)
+        result_nodes = split_nodes_delimiter(nodes, '`')
         test_nodes = [
             TextNode("Text ", TextType.TEXT),
             TextNode("asd", TextType.CODE),
@@ -44,9 +44,9 @@ class TestTextNode(unittest.TestCase):
         node = TextNode("Text **asd** xxx _ite_", TextType.TEXT)
         node2 = TextNode("Text `www` www", TextType.BOLD)
         nodes = [node, node2]
-        result_nodes = split_nodes_delimiter(nodes, '`',TextType.CODE)
-        result_nodes = split_nodes_delimiter(result_nodes, '_',TextType.ITALIC)
-        result_nodes = split_nodes_delimiter(result_nodes, '**',TextType.BOLD)
+        result_nodes = split_nodes_delimiter(nodes, '`')
+        result_nodes = split_nodes_delimiter(result_nodes, '_')
+        result_nodes = split_nodes_delimiter(result_nodes, '**')
         test_nodes = [
             TextNode("Text ", TextType.TEXT),
             TextNode("asd", TextType.BOLD),
@@ -103,6 +103,28 @@ class TestTextNode(unittest.TestCase):
                 TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
                 TextNode(" and another ", TextType.TEXT),
                 TextNode("second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"),
+            ],
+            new_nodes,
+        )
+
+    def test_full_thing(self):
+        node = TextNode(
+            "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)",
+            TextType.TEXT,
+        )
+        new_nodes = text_to_textnodes([node])
+        self.assertListEqual(
+            [
+                TextNode("This is ", TextType.TEXT),
+                TextNode("text", TextType.BOLD),
+                TextNode(" with an ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+                TextNode(" word and a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" and an ", TextType.TEXT),
+                TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+                TextNode(" and a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://boot.dev"),
             ],
             new_nodes,
         )
