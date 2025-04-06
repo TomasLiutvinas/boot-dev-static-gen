@@ -102,3 +102,9 @@ def text_to_textnodes(text):
     updated_nodes = split_nodes_image(updated_nodes)
     updated_nodes = split_nodes_link(updated_nodes)
     return updated_nodes
+
+def markdown_to_blocks(markdown):
+    res = list(map(lambda x: x.strip(),markdown.split('\n\n')))
+    return list(filter(lambda x: x != "",res))
+
+
