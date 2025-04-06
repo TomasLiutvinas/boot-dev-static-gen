@@ -6,6 +6,9 @@ import re
 def extract_markdown_images(text):
     return re.findall(r"!\[(.*?)\]\((.*?)\)",text)
 
+def extract_markdown_links(text):
+    return re.findall(r"\[(.*?)\]\((.*?)\)",text)
+
 def text_node_to_html_node(text_node):
     match text_node.text_type:
         case TextType.CODE:
@@ -42,7 +45,24 @@ def split_nodes_image(old_nodes):
     return res
 
 def split_nodes_link(old_nodes):
-    return []
+    res = list()
+    for node in old_nodes:
+        matches = extract_markdown_links(node.text)
+        if len(matches) == 0:
+            if node.text == "":
+                continue
+            res.append(node)
+            continue
+
+        match = matches[0]
+        delimiter = f"[{match[0]}]({match[1]})"
+        parts = node.text.split(delimiter)
+        if len(parts) > 1:
+            before = TextNode(parts[0], node.text_type)
+            item = TextNode(match[0], TextType.LINK, match[1])
+            after = TextNode(parts[1],node.text_type)
+            res = res + split_nodes_link([before]) + [item] + split_nodes_link([after])
+    return res
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     def get_type(delimiter):
