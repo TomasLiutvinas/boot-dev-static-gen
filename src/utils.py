@@ -4,7 +4,7 @@ from textnode import TextNode, TextType
 import re
 
 def extract_markdown_images(text):
-    return re.findall(r"!\[(.*)\]\((.*)\)",text)
+    return re.findall(r"!\[(.*?)\]\((.*?)\)",text)
 
 def text_node_to_html_node(text_node):
     match text_node.text_type:
@@ -20,6 +20,29 @@ def text_node_to_html_node(text_node):
             return LeafNode("a", text_node.text,{"href":text_node.url})
         case TextType.IMAGE:
             return LeafNode("img", "",{"src":text_node.url, "alt":""})
+
+def split_nodes_image(old_nodes):
+    res = list()
+    for node in old_nodes:
+        matches = extract_markdown_images(node.text)
+        if len(matches) == 0:
+            if node.text == "":
+                continue
+            res.append(node)
+            continue
+
+        match = matches[0]
+        delimiter = f"![{match[0]}]({match[1]})"
+        parts = node.text.split(delimiter)
+        if len(parts) > 1:
+            before = TextNode(parts[0], node.text_type)
+            item = TextNode(match[0], TextType.IMAGE, match[1])
+            after = TextNode(parts[1],node.text_type)
+            res = res + split_nodes_image([before]) + [item] + split_nodes_image([after])
+    return res
+
+def split_nodes_link(old_nodes):
+    return []
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     def get_type(delimiter):
