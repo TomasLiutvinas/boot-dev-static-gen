@@ -7,12 +7,12 @@ from enum import Enum
 # Links, in this format: [anchor text](url)
 # Images, in this format: ![alt text](url)
 class TextType(Enum):
-    NORMAL = "normal"
     BOLD = "bold"
     ITALIC = "italic"
     CODE = "code"
     LINK = "links"
     IMAGE= "images"
+    TEXT= "text"
 
 class TextNode():
     def __init__(self, text, text_type, url=None):

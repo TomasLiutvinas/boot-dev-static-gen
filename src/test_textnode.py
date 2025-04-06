@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from utils import split_nodes_delimiter
+from utils import split_nodes_delimiter, text_node_to_html_node
 
 
 class TestTextNode(unittest.TestCase):
@@ -26,14 +26,14 @@ class TestTextNode(unittest.TestCase):
         self.assertNotEqual(node, node2)
 
     def test_split_code(self):
-        node = TextNode("Text `asd` xxx", TextType.NORMAL)
+        node = TextNode("Text `asd` xxx", TextType.TEXT)
         node2 = TextNode("Text `www` www", TextType.BOLD)
         nodes = [node, node2]
         result_nodes = split_nodes_delimiter(nodes, '`',TextType.CODE)
         test_nodes = [
-            TextNode("Text ", TextType.NORMAL),
+            TextNode("Text ", TextType.TEXT),
             TextNode("asd", TextType.CODE),
-            TextNode(" xxx", TextType.NORMAL),
+            TextNode(" xxx", TextType.TEXT),
             TextNode("Text ", TextType.BOLD),
             TextNode("www", TextType.CODE),
             TextNode(" www", TextType.BOLD)
@@ -41,16 +41,16 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(test_nodes,result_nodes)
 
     def test_split_bold(self):
-        node = TextNode("Text **asd** xxx _ite_", TextType.NORMAL)
+        node = TextNode("Text **asd** xxx _ite_", TextType.TEXT)
         node2 = TextNode("Text `www` www", TextType.BOLD)
         nodes = [node, node2]
         result_nodes = split_nodes_delimiter(nodes, '`',TextType.CODE)
         result_nodes = split_nodes_delimiter(result_nodes, '_',TextType.ITALIC)
         result_nodes = split_nodes_delimiter(result_nodes, '**',TextType.BOLD)
         test_nodes = [
-            TextNode("Text ", TextType.NORMAL),
+            TextNode("Text ", TextType.TEXT),
             TextNode("asd", TextType.BOLD),
-            TextNode(" xxx ", TextType.NORMAL),
+            TextNode(" xxx ", TextType.TEXT),
             TextNode("ite", TextType.ITALIC),
             TextNode("Text ", TextType.BOLD),
             TextNode("www", TextType.CODE),
@@ -62,6 +62,12 @@ class TestTextNode(unittest.TestCase):
         node = TextNode(None, None, None)
         node2 = TextNode(None, None, None)
         self.assertEqual(node, node2)
+
+    def test_text(self):
+        node = TextNode("This is a text node", TextType.TEXT)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, None)
+        self.assertEqual(html_node.value, "This is a text node")
 
 if __name__ == "__main__":
     unittest.main()

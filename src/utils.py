@@ -1,4 +1,21 @@
+from htmlnode import HTMLNode
+from leafnode import LeafNode
 from textnode import TextNode, TextType
+
+def text_node_to_html_node(text_node):
+    match text_node.text_type:
+        case TextType.CODE:
+            return HTMLNode("code",text_node.text)
+        case TextType.TEXT:
+            return LeafNode(None, text_node.text)
+        case TextType.ITALIC:
+            return LeafNode("i", text_node.text)
+        case TextType.BOLD:
+            return LeafNode("b", text_node.text)
+        case TextType.LINK:
+            return LeafNode("a", text_node.text,{"href":text_node.url})
+        case TextType.IMAGE:
+            return LeafNode("img", "",{"src":text_node.url, "alt":""})
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     def get_type(delimiter):
@@ -10,7 +27,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             case '**':
                 return TextType.BOLD
             case _:
-                return TextType.NORMAL
+                return TextType.TEXT
 
     res = list()
     for node in old_nodes:
