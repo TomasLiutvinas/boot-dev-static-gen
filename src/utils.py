@@ -1,6 +1,10 @@
 from htmlnode import HTMLNode
 from leafnode import LeafNode
 from textnode import TextNode, TextType
+import re
+
+def extract_markdown_images(text):
+    return re.findall(r"!\[(.*)\]\((.*)\)",text)
 
 def text_node_to_html_node(text_node):
     match text_node.text_type:
