@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 # Normal text
 # **Bold text**
 # _Italic text_
@@ -11,16 +12,18 @@ class TextType(Enum):
     ITALIC = "italic"
     CODE = "code"
     LINK = "links"
-    IMAGE= "image"
-    TEXT= "text"
+    IMAGE = "image"
+    TEXT = "text"
+
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
     HEADING = "heading"
     CODE = "code"
     QUOTE = "quote"
-    UNORDERED_LIST= "unordered_list"
-    ORDERED_LIST= "ordered_list"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
+
 
 class TextNode():
     def __init__(self, text, text_type, url=None):

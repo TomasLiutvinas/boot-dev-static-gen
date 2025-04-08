@@ -2,18 +2,20 @@ from htmlnode import HTMLNode
 from leafnode import LeafNode
 from textnode import TextNode, TextType, BlockType
 import re
-from functools import reduce
+
 
 def extract_markdown_images(text):
-    return re.findall(r"!\[(.*?)\]\((.*?)\)",text)
+    return re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+
 
 def extract_markdown_links(text):
-    return re.findall(r"\[(.*?)\]\((.*?)\)",text)
+    return re.findall(r"\[(.*?)\]\((.*?)\)", text)
+
 
 def text_node_to_html_node(text_node):
     match text_node.text_type:
         case TextType.CODE:
-            return HTMLNode("code",text_node.text)
+            return HTMLNode("code", text_node.text)
         case TextType.TEXT:
             return LeafNode(None, text_node.text)
         case TextType.ITALIC:
@@ -21,9 +23,10 @@ def text_node_to_html_node(text_node):
         case TextType.BOLD:
             return LeafNode("b", text_node.text)
         case TextType.LINK:
-            return LeafNode("a", text_node.text,{"href":text_node.url})
+            return LeafNode("a", text_node.text, {"href": text_node.url})
         case TextType.IMAGE:
-            return LeafNode("img", "",{"src":text_node.url, "alt":""})
+            return LeafNode("img", "", {"src": text_node.url, "alt": ""})
+
 
 def split_nodes_image(old_nodes):
     res = list()
@@ -41,9 +44,10 @@ def split_nodes_image(old_nodes):
         if len(parts) > 1:
             before = TextNode(parts[0], node.text_type)
             item = TextNode(match[0], TextType.IMAGE, match[1])
-            after = TextNode(parts[1],node.text_type)
+            after = TextNode(parts[1], node.text_type)
             res = res + split_nodes_image([before]) + [item] + split_nodes_image([after])
     return res
+
 
 def split_nodes_link(old_nodes):
     res = list()
@@ -61,10 +65,9 @@ def split_nodes_link(old_nodes):
         if len(parts) > 1:
             before = TextNode(parts[0], node.text_type)
             item = TextNode(match[0], TextType.LINK, match[1])
-            after = TextNode(parts[1],node.text_type)
+            after = TextNode(parts[1], node.text_type)
             res = res + split_nodes_link([before]) + [item] + split_nodes_link([after])
     return res
-
 
 
 def split_nodes_delimiter(old_nodes, delimiter):
@@ -87,25 +90,28 @@ def split_nodes_delimiter(old_nodes, delimiter):
         if len(parts) > 2:
             before = TextNode(parts[0], node.text_type)
             item = TextNode(parts[1], get_type(delimiter))
-            after = list(map(lambda x: TextNode(x,node.text_type),parts[2:]))
-            res += split_nodes_delimiter([before,item] + after, delimiter)
+            after = list(map(lambda x: TextNode(x, node.text_type), parts[2:]))
+            res += split_nodes_delimiter([before, item] + after, delimiter)
         else:
             if len(parts) > 0 and parts[0] != "":
                 res.append(node)
     return res
 
+
 def text_to_textnodes(text):
-    delimiters = ['`','_','**']
+    delimiters = ['`', '_', '**']
     updated_nodes = list(text)
     for pisau in delimiters:
-        updated_nodes = split_nodes_delimiter(updated_nodes,pisau)
+        updated_nodes = split_nodes_delimiter(updated_nodes, pisau)
     updated_nodes = split_nodes_image(updated_nodes)
     updated_nodes = split_nodes_link(updated_nodes)
     return updated_nodes
 
+
 def markdown_to_blocks(markdown):
-    res = list(map(lambda x: x.strip(),markdown.split('\n\n')))
-    return list(filter(lambda x: x != "",res))
+    res = list(map(lambda x: x.strip(), markdown.split('\n\n')))
+    return list(filter(lambda x: x != "", res))
+
 
 # Headings start with 1-6 # characters, followed by a space and then the heading text.
 # Code blocks must start with 3 backticks and end with 3 backticks.
@@ -119,12 +125,16 @@ def block_to_block_type(block_md):
         if parts[0].strip("#") == "":
             return len(parts[0]) < 7
         return False
+
     def get_code():
-        return len(list(filter(lambda x: x == '`',block_md[:3]))) == 3 and len(list(filter(lambda x: x == '`',block_md[-3:]))) == 3
+        return len(list(filter(lambda x: x == '`', block_md[:3]))) == 3 and len(list(filter(lambda x: x == '`', block_md[-3:]))) == 3
+
     def get_quote():
         return len(list(filter(lambda x: len(x) > 0 and x[0] != '>', block_md.split('\n')))) == 0
+
     def get_unordered_l():
         return len(list(filter(lambda x: len(x) > 2 and x[0] != '-' and x[1] != ' ', block_md.split('\n')))) == 0
+
     def get_ordered_l():
         count = 1
         parts = block_md.split('\n')
@@ -149,3 +159,21 @@ def block_to_block_type(block_md):
         return BlockType.ORDERED_LIST
 
     return BlockType.PARAGRAPH
+
+
+def markdown_to_html_node(md):
+    blocks = markdown_to_blocks(md)
+    nodes = list()
+    for block in blocks:
+        match block_to_block_type(block):
+            case BlockType.HEADING:
+                nodes.append(HTMLNode("h1", None, text_to_textnodes(block)))
+            case BlockType.CODE:
+                nodes.append(HTMLNode("code", None, text_to_textnodes(block)))
+            case BlockType.QUOTE:
+                nodes.append(HTMLNode("quote", None, text_to_textnodes(block)))
+            case BlockType.UNORDERED_LIST:
+                nodes.append(HTMLNode("ul", None, text_to_textnodes(block)))
+            case BlockType.ORDERED_LIST:
+                nodes.append(HTMLNode("ol", None, text_to_textnodes(block)))
+    return HTMLNode("div", None, nodes)

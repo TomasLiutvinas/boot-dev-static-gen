@@ -1,7 +1,8 @@
 from functools import reduce
 
+
 class HTMLNode():
-    def __init__(self, tag = None, value = None, children = None, props:dict = {}):
+    def __init__(self, tag=None, value=None, children=None, props: dict = {}):
         self.tag = tag
         self.value = value
         self.children = children
@@ -16,4 +17,4 @@ class HTMLNode():
     def props_to_html(self):
         if self.props == {}:
             return ""
-        return reduce(lambda x,y: f"{x} {y[0]}='{y[1]}'",self.props.items(),"")
+        return reduce(lambda x, y: f"{x} {y[0]}='{y[1]}'", self.props.items(), "")
