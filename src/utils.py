@@ -71,8 +71,9 @@ def split_nodes_link(old_nodes):
 
 
 def split_nodes_delimiter(old_nodes, delimiter):
-    # print("CALLED WITH NODES:", old_nodes)
-    # print("CALLED WITH DELIMITERO:", delimiter)
+    print("CALLED WITH NODES:", old_nodes)
+    print("CALLED WITH DELIMITERO:", delimiter)
+
     def get_type(delimiter):
         match delimiter:
             case '`':
@@ -97,10 +98,11 @@ def split_nodes_delimiter(old_nodes, delimiter):
                 res.append(node)
     return res
 
-
+# this is wrong
 def text_to_textnodes(text):
     delimiters = ['`', '_', '**']
-    updated_nodes = list(text)
+    updated_nodes = [text]
+    print("NOW WE GALKIN (MAXIM):", updated_nodes)
     for pisau in delimiters:
         updated_nodes = split_nodes_delimiter(updated_nodes, pisau)
     updated_nodes = split_nodes_image(updated_nodes)
@@ -127,6 +129,10 @@ def block_to_block_type(block_md):
         return False
 
     def get_code():
+        # print(f"ISCODESTART:{len(list(filter(lambda x: x == '`', block_md[:3])))}")
+        # print(f"ISCODEENDED:{len(list(filter(lambda x: x == '`', block_md[-3:])))}")
+        # print(block_md)
+        # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         return len(list(filter(lambda x: x == '`', block_md[:3]))) == 3 and len(list(filter(lambda x: x == '`', block_md[-3:]))) == 3
 
     def get_quote():
@@ -162,18 +168,17 @@ def block_to_block_type(block_md):
 
 
 def markdown_to_html_node(md):
-    blocks = markdown_to_blocks(md)
-    nodes = list()
-    for block in blocks:
-        match block_to_block_type(block):
-            case BlockType.HEADING:
-                nodes.append(HTMLNode("h1", None, text_to_textnodes(block)))
-            case BlockType.CODE:
-                nodes.append(HTMLNode("code", None, text_to_textnodes(block)))
-            case BlockType.QUOTE:
-                nodes.append(HTMLNode("quote", None, text_to_textnodes(block)))
-            case BlockType.UNORDERED_LIST:
-                nodes.append(HTMLNode("ul", None, text_to_textnodes(block)))
-            case BlockType.ORDERED_LIST:
-                nodes.append(HTMLNode("ol", None, text_to_textnodes(block)))
-    return HTMLNode("div", None, nodes)
+    match block_to_block_type(md.strip('\n')):
+        case BlockType.HEADING:
+            return LeafNode("h1",text_to_textnodes(md))
+        case BlockType.CODE:
+            return LeafNode("code", md)
+        case BlockType.QUOTE:
+            return LeafNode("quote", text_to_textnodes(md))
+        case BlockType.UNORDERED_LIST:
+            return LeafNode("ul", text_to_textnodes(md))
+        case BlockType.ORDERED_LIST:
+            return LeafNode("ol", text_to_textnodes(md))
+        case BlockType.PARAGRAPH:
+            print("BOIS WE GAVE A BARAGAB:", md)
+            return LeafNode("p", text_to_textnodes(md))
