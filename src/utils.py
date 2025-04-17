@@ -1,6 +1,8 @@
 from htmlnode import HTMLNode
 from leafnode import LeafNode
+from parentnode import ParentNode
 from textnode import TextNode, TextType, BlockType
+from functools import reduce
 import re
 
 
@@ -15,7 +17,7 @@ def extract_markdown_links(text):
 def text_node_to_html_node(text_node):
     match text_node.text_type:
         case TextType.CODE:
-            return HTMLNode("code", text_node.text)
+            return LeafNode("code", text_node.text)
         case TextType.TEXT:
             return LeafNode(None, text_node.text)
         case TextType.ITALIC:
@@ -71,9 +73,6 @@ def split_nodes_link(old_nodes):
 
 
 def split_nodes_delimiter(old_nodes, delimiter):
-    print("CALLED WITH NODES:", old_nodes)
-    print("CALLED WITH DELIMITERO:", delimiter)
-
     def get_type(delimiter):
         match delimiter:
             case '`':
@@ -86,6 +85,9 @@ def split_nodes_delimiter(old_nodes, delimiter):
                 return TextType.TEXT
 
     res = list()
+    if type(old_nodes) == str:
+        old_nodes = [TextNode(old_nodes, TextType.TEXT)]
+
     for node in old_nodes:
         parts = node.text.split(delimiter)
         if len(parts) > 2:
@@ -96,13 +98,14 @@ def split_nodes_delimiter(old_nodes, delimiter):
         else:
             if len(parts) > 0 and parts[0] != "":
                 res.append(node)
+
     return res
 
 # this is wrong
+# text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
 def text_to_textnodes(text):
-    delimiters = ['`', '_', '**']
-    updated_nodes = [text]
-    print("NOW WE GALKIN (MAXIM):", updated_nodes)
+    delimiters = ['`', '_', '**', '\n']
+    updated_nodes = text
     for pisau in delimiters:
         updated_nodes = split_nodes_delimiter(updated_nodes, pisau)
     updated_nodes = split_nodes_image(updated_nodes)
@@ -129,10 +132,6 @@ def block_to_block_type(block_md):
         return False
 
     def get_code():
-        # print(f"ISCODESTART:{len(list(filter(lambda x: x == '`', block_md[:3])))}")
-        # print(f"ISCODEENDED:{len(list(filter(lambda x: x == '`', block_md[-3:])))}")
-        # print(block_md)
-        # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         return len(list(filter(lambda x: x == '`', block_md[:3]))) == 3 and len(list(filter(lambda x: x == '`', block_md[-3:]))) == 3
 
     def get_quote():
@@ -153,6 +152,9 @@ def block_to_block_type(block_md):
 
         return True
 
+    if len(block_md) < 1:
+        return BlockType.PARAGRAPH
+
     if get_head():
         return BlockType.HEADING
     if get_code():
@@ -166,19 +168,46 @@ def block_to_block_type(block_md):
 
     return BlockType.PARAGRAPH
 
+def code_block_strip(md):
+    md = md.strip('\n')
+    md = md[3:-3]
+    return md.lstrip('\n')
+
+# md = """
+# This is **bolded** paragraph
+# text in a p
+# tag here
+#
+# This is another paragraph with _italic_ text and `code` here
+#
+# """
+
+def md_to_paragraphs(md):
+    paragraphs = md.split('\n\n')
+    if len(paragraphs) > 1:
+        res = []
+        for paragraph in paragraphs:
+            if len(paragraph) < 1 or not paragraph:
+                continue
+            res.append(ParentNode("p", list(map(lambda x: text_node_to_html_node(x),text_to_textnodes(paragraph)))))
+        return ParentNode("div", res)
+    return ParentNode("div", [ParentNode("p", list(map(lambda x: text_node_to_html_node(x),text_to_textnodes(md))))])
+
 
 def markdown_to_html_node(md):
     match block_to_block_type(md.strip('\n')):
         case BlockType.HEADING:
             return LeafNode("h1",text_to_textnodes(md))
         case BlockType.CODE:
-            return LeafNode("code", md)
+            code_node = LeafNode("code", code_block_strip(md))
+            pre_node = ParentNode("pre", [code_node])
+            div_node = ParentNode("div", [pre_node])
+            return div_node
         case BlockType.QUOTE:
-            return LeafNode("quote", text_to_textnodes(md))
+            return ParentNode("quote", text_to_textnodes(md))
         case BlockType.UNORDERED_LIST:
-            return LeafNode("ul", text_to_textnodes(md))
+            return ParentNode("ul", text_to_textnodes(md))
         case BlockType.ORDERED_LIST:
-            return LeafNode("ol", text_to_textnodes(md))
+            return ParentNode("ol", text_to_textnodes(md))
         case BlockType.PARAGRAPH:
-            print("BOIS WE GAVE A BARAGAB:", md)
-            return LeafNode("p", text_to_textnodes(md))
+            return md_to_paragraphs(md)

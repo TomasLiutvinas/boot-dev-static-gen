@@ -13,4 +13,8 @@ class ParentNode(HTMLNode):
         if self.children is None or len(self.children) < 1:
             raise ValueError("The cheeeldreen are missing")
 
-        return reduce(lambda x, y: f"<{self.tag}{self.props_to_html()}>{x}{y.to_html()}</{self.tag}>", self.children, "")
+        something = reduce(lambda x, y: f"{x}{y.to_html()}", self.children, "")
+        return f"<{self.tag}{self.props_to_html()}>{something}</{self.tag}>"
+
+    def __repr__(self):
+        return f"ParentNode({self.tag}, {self.children}, {self.props})"
