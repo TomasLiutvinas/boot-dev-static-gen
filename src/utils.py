@@ -93,7 +93,7 @@ def split_nodes_delimiter(old_nodes, delimiter):
         if len(parts) > 2:
             before = TextNode(parts[0], node.text_type)
             item = TextNode(parts[1], get_type(delimiter))
-            after = list(map(lambda x: TextNode(x, node.text_type), parts[2:]))
+            after = list(map(lambda x: TextNode(x.replace('\n', ' '), node.text_type), parts[2:]))
             res += split_nodes_delimiter([before, item] + after, delimiter)
         else:
             if len(parts) > 0 and parts[0] != "":
@@ -181,7 +181,6 @@ def code_block_strip(md):
 # This is another paragraph with _italic_ text and `code` here
 #
 # """
-
 def md_to_paragraphs(md):
     paragraphs = md.split('\n\n')
     if len(paragraphs) > 1:
@@ -210,4 +209,4 @@ def markdown_to_html_node(md):
         case BlockType.ORDERED_LIST:
             return ParentNode("ol", text_to_textnodes(md))
         case BlockType.PARAGRAPH:
-            return md_to_paragraphs(md)
+            return md_to_paragraphs(md.strip('\n'))

@@ -194,6 +194,7 @@ This is the same paragraph on a new line
         self.assertEqual(block, BlockType.ORDERED_LIST)
 
     def test_paragraphs(self):
+        print("-------------------------------------------")
         md = """
 This is **bolded** paragraph
 text in a p
@@ -203,21 +204,12 @@ This is another paragraph with _italic_ text and `code` here
 
 """
         expected = "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>"
-        node = markdown_to_html_node(md)
-        print("WAKAWAKAWAKWA")
-        print("WAKAWAKAWAKWA")
-        print(node)
-        print("WAKAWAKAWAKWA")
-        print("WAKAWAKAWAKWA")
-        html = node.to_html()
-        print("WAKAWAKAWAKWA")
-        print("WAKAWAKAWAKWA")
-        print(html)
-        print("WAKAWAKAWAKWA")
-        print("WAKAWAKAWAKWA")
 
+        node = markdown_to_html_node(md)
+        html = node.to_html()
 
         self.assertEqual(html, expected ,)
+        print("-------------------------------------------")
 
     def test_codeblock(self):
         md = """
