@@ -1,4 +1,3 @@
-from os import path
 import os
 from textnode import TextNode, TextType
 import shutil
@@ -9,6 +8,19 @@ def main():
     copy_thing("static", "public")
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)
+
+
+def extract_title(markdown):
+    title = None
+    items = markdown.splitlines()
+    for item in items:
+        if len(item) > 0 and item.startswith("#"):
+            title = item.strip("#").strip(" ")
+
+    if title == None:
+        raise Exception("No title")
+
+    return title
 
 
 def delete_public():
