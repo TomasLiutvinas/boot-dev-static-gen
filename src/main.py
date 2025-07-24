@@ -2,12 +2,31 @@ import os
 from textnode import TextNode, TextType
 import shutil
 
+from utils import markdown_to_html_node
+
 
 def main():
     delete_public()
     copy_thing("static", "public")
+    generate_page("content/index.md", "template.html", "public/index.html")
     node = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
     print(node)
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    source_file_content = open(from_path, mode="r").read()
+    template_file_content = open(template_path, mode="r").read()
+
+    title = extract_title(source_file_content)
+    html_nodes = markdown_to_html_node(source_file_content)
+    html_content = html_nodes.to_html()
+    print("[HTML] ", "\n", html_content)
+    generated_content = template_file_content.replace("{{ Title }}",title).replace("{{ Content }}", html_content)
+
+    if not os.path.exists(os.path.dirname(dest_path)):
+        os.makedirs(dest_path)
+    with open(dest_path, mode="x+") as new_file:
+        new_file.write(generated_content)
 
 
 def extract_title(markdown):

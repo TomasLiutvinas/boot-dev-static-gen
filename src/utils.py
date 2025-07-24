@@ -196,7 +196,7 @@ def md_to_paragraphs(md):
 def markdown_to_html_node(md):
     match block_to_block_type(md.strip('\n')):
         case BlockType.HEADING:
-            return LeafNode("h1",text_to_textnodes(md))
+            return LeafNode("h1", text_to_textnodes(md))
         case BlockType.CODE:
             code_node = LeafNode("code", code_block_strip(md))
             pre_node = ParentNode("pre", [code_node])
