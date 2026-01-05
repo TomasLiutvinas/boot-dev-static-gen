@@ -198,12 +198,9 @@ def markdown_to_html_node(md):
     match block_to_block_type(md):
         case BlockType.HEADING:
             # got # header here
-            parts = md.split('\n')
-            header_html_node = LeafNode("h1", extract_title(parts[1]))
-
-            # text_node_list = text_to_textnodes("\n".join(parts[2:]))
-
-            new_root = markdown_to_html_node("\n".join(parts[2:]))
+            parts = md.strip('\n').split('\n')
+            header_html_node = LeafNode("h1", extract_title(parts[0]))
+            new_root = markdown_to_html_node("\n".join(parts[1:]))
             children = [header_html_node, *new_root.items]
             root_node = ParentNode("div", children)
             return root_node
@@ -222,16 +219,11 @@ def markdown_to_html_node(md):
             return md_to_paragraphs(md.strip('\n'))
 
 def extract_title(markdown):
-    title = None
     items = markdown.splitlines()
     for item in items:
         if len(item) > 0 and item.startswith("#"):
-            title = item.strip("#").strip(" ")
-
-    if title == None:
-        raise Exception("No title")
-
-    return title
+            return item.strip("#").strip(" ")
+    raise Exception("No title")
 
 def generate_page(from_path, template_path, dest_path):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
