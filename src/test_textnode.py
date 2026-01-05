@@ -194,7 +194,6 @@ This is the same paragraph on a new line
         self.assertEqual(block, BlockType.ORDERED_LIST)
 
     def test_paragraphs(self):
-        print("-------------------------------------------")
         md = """
 This is **bolded** paragraph
 text in a p
@@ -208,8 +207,25 @@ This is another paragraph with _italic_ text and `code` here
         node = markdown_to_html_node(md)
         html = node.to_html()
 
-        self.assertEqual(html, expected ,)
-        print("-------------------------------------------")
+        self.assertEqual(html, expected)
+
+# TODO
+    def test_paragraphs_again(self):
+        md = """
+# Tolkien Fan Club
+
+![JRR Tolkien sitting](/images/tolkien.png)
+
+Here's the deal, **I like Tolkien**.
+
+"""
+        expected = "<div><h1>Tolkien Fan Club</h1><p><img src='/images/tolkien.png' alt=''>JRR Tolkien sitting</img></p><p>Here's the deal, <b>I like Tolkien</b>.</p></div>"
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        print(html)
+        print(expected)
+        self.assertEqual(html, expected)
+
 
     def test_codeblock(self):
         md = """
@@ -222,7 +238,7 @@ the **same** even with inline stuff
         html = node.to_html()
         expected = "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>"
 
-        self.assertEqual(html,expected,)
+        self.assertEqual(html,expected)
 
 
 if __name__ == "__main__":

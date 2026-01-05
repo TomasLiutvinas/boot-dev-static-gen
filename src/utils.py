@@ -1,9 +1,10 @@
+import os
 from htmlnode import HTMLNode
 from leafnode import LeafNode
 from parentnode import ParentNode
 from textnode import TextNode, TextType, BlockType
-from functools import reduce
 import re
+import shutil
 
 
 def extract_markdown_images(text):
@@ -27,7 +28,7 @@ def text_node_to_html_node(text_node):
         case TextType.LINK:
             return LeafNode("a", text_node.text, {"href": text_node.url})
         case TextType.IMAGE:
-            return LeafNode("img", "", {"src": text_node.url, "alt": ""})
+            return LeafNode("img", text_node.text, {"src": text_node.url, "alt": ""})
 
 
 def split_nodes_image(old_nodes):
@@ -106,8 +107,8 @@ def split_nodes_delimiter(old_nodes, delimiter):
 def text_to_textnodes(text):
     delimiters = ['`', '_', '**', '\n']
     updated_nodes = text
-    for pisau in delimiters:
-        updated_nodes = split_nodes_delimiter(updated_nodes, pisau)
+    for delimiter in delimiters:
+        updated_nodes = split_nodes_delimiter(updated_nodes, delimiter)
     updated_nodes = split_nodes_image(updated_nodes)
     updated_nodes = split_nodes_link(updated_nodes)
     return updated_nodes
@@ -132,7 +133,7 @@ def block_to_block_type(block_md):
         return False
 
     def get_code():
-        return len(list(filter(lambda x: x == '`', block_md[:3]))) == 3 and len(list(filter(lambda x: x == '`', block_md[-3:]))) == 3
+        return len(list(filter(lambda x: x == '`', block_md.strip('\n')[:3]))) == 3 and len(list(filter(lambda x: x == '`', block_md.strip('\n')[-3:]))) == 3
 
     def get_quote():
         return len(list(filter(lambda x: len(x) > 0 and x[0] != '>', block_md.split('\n')))) == 0
@@ -194,9 +195,18 @@ def md_to_paragraphs(md):
 
 
 def markdown_to_html_node(md):
-    match block_to_block_type(md.strip('\n')):
+    match block_to_block_type(md):
         case BlockType.HEADING:
-            return LeafNode("h1", text_to_textnodes(md))
+            # got # header here
+            parts = md.split('\n')
+            header_html_node = LeafNode("h1", extract_title(parts[1]))
+
+            # text_node_list = text_to_textnodes("\n".join(parts[2:]))
+
+            new_root = markdown_to_html_node("\n".join(parts[2:]))
+            children = [header_html_node, *new_root.items]
+            root_node = ParentNode("div", children)
+            return root_node
         case BlockType.CODE:
             code_node = LeafNode("code", code_block_strip(md))
             pre_node = ParentNode("pre", [code_node])
@@ -210,3 +220,47 @@ def markdown_to_html_node(md):
             return ParentNode("ol", text_to_textnodes(md))
         case BlockType.PARAGRAPH:
             return md_to_paragraphs(md.strip('\n'))
+
+def extract_title(markdown):
+    title = None
+    items = markdown.splitlines()
+    for item in items:
+        if len(item) > 0 and item.startswith("#"):
+            title = item.strip("#").strip(" ")
+
+    if title == None:
+        raise Exception("No title")
+
+    return title
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    source_file_content = open(from_path, mode="r").read()
+    template_file_content = open(template_path, mode="r").read()
+
+    title = extract_title(source_file_content)
+    html_nodes = markdown_to_html_node(source_file_content)
+    html_content = html_nodes.to_html()
+    generated_content = template_file_content.replace("{{ Title }}",title).replace("{{ Content }}", html_content)
+
+    if not os.path.exists(os.path.dirname(dest_path)):
+        os.makedirs(dest_path)
+    with open(dest_path, mode="x+") as new_file:
+        new_file.write(generated_content)
+
+
+def delete_public():
+    shutil.rmtree("public")
+    os.mkdir("public")
+
+def copy_thing(source_dir, target_dir):
+    stuff = os.listdir(source_dir)
+    for item in stuff:
+        existing_item_path = f"{source_dir}/{item}"
+        target_item_path = f"{target_dir}/{item}"
+        if os.path.isdir(existing_item_path):
+            if not os.path.exists(target_item_path):
+                os.mkdir(target_item_path)
+            copy_thing(existing_item_path, target_item_path)
+        else:
+            shutil.copy(existing_item_path, target_item_path)
